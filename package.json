@@ -1,0 +1,25 @@
+{
+  "name": "game-backend",
+  "version": "1.0.0",
+  "description": "Backend for Flutter Game Project",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "initdb": "node -e \"require('./src/models/init.db')().catch(console.error).finally(() => process.exit())\""
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.0",
+    "pg": "^8.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
