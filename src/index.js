@@ -22,7 +22,8 @@ const server = http.createServer(app); // MỚI
 const io = new Server(server, { // MỚI
   cors: {
     origin: "*", // Cho phép mọi client kết nối (có thể giới hạn sau)
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 // ----------------------------------------------------
