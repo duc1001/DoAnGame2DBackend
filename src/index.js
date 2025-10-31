@@ -8,7 +8,7 @@ const createTables = require('./models/init.db'); // Import hàm tạo bảng
 const authRoutes = require('./api/auth.routes');
 const scoreRoutes = require('./api/score.routes');
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 const app = express();
 
 // Middlewares
