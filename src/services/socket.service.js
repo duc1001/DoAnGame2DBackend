@@ -63,48 +63,70 @@ module.exports = (io, pool) => {
     console.log(`Một người chơi đã kết nối: ${socket.id}`);
 
     // === 1. Xử lý tìm trận ===
-    socket.on('find_game', () => {
-      console.log(`Người chơi ${socket.id} đang tìm trận...`);
+    socket.on('create_room', () => {
+      const roomId = generateRoomId();
+      console.log(`Người chơi ${socket.id} đã tạo phòng: ${roomId}`);
+
+      // Tạo bảng trống
+      const initialBoard = Array(boardSize).fill(0).map(() => Array(boardSize).fill(empty));
       
-      if (waitingPlayer) {
-        if (waitingPlayer.id === socket.id) {
-          // Người chơi này đã ở trong hàng chờ, không làm gì cả.
-          // (Họ đã gọi find_game 2 lần)
-          console.log(`Người chơi ${socket.id} đã ở trong hàng chờ.`);
-          return; 
-        }
-        // --- Đã có người chờ -> Ghép cặp ---
-        const player1Socket = waitingPlayer;
-        const player2Socket = socket;
-        const roomId = `${player1Socket.id}-${player2Socket.id}`;
-        
-        // Reset người chờ
-        waitingPlayer = null;
-        
-        // Tạo bảng trống
-        const initialBoard = Array(boardSize).fill(0).map(() => Array(boardSize).fill(empty));
-        
-        // Tạo phòng
-        rooms[roomId] = {
-          players: [player1Socket.id, player2Socket.id],
-          board: initialBoard,
-          turn: player1, // Player 1 (X) đi trước
-        };
+      // Tạo phòng
+      rooms[roomId] = {
+        players: [socket.id], // Người tạo là player 1
+        board: initialBoard,
+        turn: player1, 
+      };
 
-        // Cho cả 2 vào chung 1 room của socket.io
-        player1Socket.join(roomId);
-        player2Socket.join(roomId);
+      // Cho người tạo vào phòng
+      socket.join(roomId);
 
-        // Gửi thông báo "Tìm thấy trận" cho cả 2
-        console.log(`Trận đấu bắt đầu: ${roomId}`);
-        player1Socket.emit('game_found', { roomId: roomId, player: player1, turn: player1, board: initialBoard });
-        player2Socket.emit('game_found', { roomId: roomId, player: player2, turn: player1, board: initialBoard });
+      // Gửi thông báo "Tạo phòng thành công" CHỈ cho người tạo
+      socket.emit('room_created', { 
+        roomId: roomId, 
+        player: player1, 
+        turn: player1, 
+        board: initialBoard 
+      });
+    });
 
-      } else {
-        // --- Chưa có ai chờ -> Cho vào hàng chờ ---
-        waitingPlayer = socket;
-        socket.emit('waiting_for_opponent', { message: 'Đang tìm đối thủ...' });
+    // === 2. VÀO PHÒNG ===
+    socket.on('join_room', (data) => {
+      const { roomId } = data;
+      const room = rooms[roomId];
+
+      // 2a. Kiểm tra phòng có tồn tại không
+      if (!room) {
+        return socket.emit('error_game', { message: 'Phòng không tồn tại!' });
       }
+
+      // 2b. Kiểm tra phòng có đầy không
+      if (room.players.length >= 2) {
+        return socket.emit('error_game', { message: 'Phòng đã đầy!' });
+      }
+
+      // 2c. Vào phòng thành công
+      console.log(`Người chơi ${socket.id} đã vào phòng: ${roomId}`);
+      room.players.push(socket.id); // Người vào là player 2
+      socket.join(roomId);
+
+      // Gửi thông báo "Bắt đầu game" cho TẤT CẢ mọi người trong phòng
+      const initialDataP1 = { 
+        roomId: roomId, 
+        player: player1, // Người tạo là P1
+        turn: room.turn, 
+        board: room.board 
+      };
+      const initialDataP2 = { 
+        roomId: roomId, 
+        player: player2, // Người vào là P2
+        turn: room.turn, 
+        board: room.board 
+      };
+      
+      // Gửi cho người tạo (P1)
+      io.to(room.players[0]).emit('game_start', initialDataP1);
+      // Gửi cho người vào (P2)
+      io.to(room.players[1]).emit('game_start', initialDataP2);
     });
 
     // === 2. Xử lý nước đi ===
@@ -153,16 +175,10 @@ module.exports = (io, pool) => {
     socket.on('disconnect', () => {
       console.log(`Người chơi đã ngắt kết nối: ${socket.id}`);
       
-      // Nếu người chơi này đang ở hàng chờ -> Xóa khỏi hàng chờ
-      if (waitingPlayer && waitingPlayer.id === socket.id) {
-        waitingPlayer = null;
-        console.log('Xóa khỏi hàng chờ.');
-        return;
-      }
-
-      // Nếu người chơi này đang ở trong phòng -> Báo cho người kia
+      // Tìm phòng mà người chơi này đang ở
       let roomId = Object.keys(rooms).find(id => rooms[id].players.includes(socket.id));
       if (roomId) {
+        // Báo cho người chơi CÒN LẠI
         io.to(roomId).emit('opponent_disconnected', { message: 'Đối thủ đã thoát!' });
         delete rooms[roomId]; // Xóa phòng
         console.log(`Đã xóa phòng ${roomId} do người chơi thoát.`);
