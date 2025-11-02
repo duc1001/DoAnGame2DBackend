@@ -4,7 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const pool = require('./config/db.config'); 
 const createTables = require('./models/init.db'); 
-
+const chessSocketService = require('./services/chess_socket.service');
 // --- CẬP NHẬT: Thêm http và socket.io ---
 const http = require('http'); // MỚI
 const { Server } = require("socket.io"); // MỚI
@@ -58,6 +58,7 @@ app.get('/', (req, res) => {
 
 // === MỚI: Gọi logic xử lý Socket ===
 require('./services/socket.service')(io, pool);
+require('./services/chess_socket.service')(io, pool);
 // ----------------------------------
 
 // === CẬP NHẬT: Khởi chạy "server" thay vì "app" ===
