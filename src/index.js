@@ -34,7 +34,17 @@ app.use(express.json());
 
 // === Kết nối DB và Tạo bảng ===
 const initializeDatabase = async () => {
-  // ... (Giữ nguyên code của bạn)
+  try {
+    const client = await pool.connect();
+    console.log("Kết nối database thành công!");
+    
+    await createTables();
+    
+    client.release();
+  } catch (err) {
+    console.error("LỖI KHỞI TẠO DATABASE:", err);
+    process.exit(1); 
+  }
 };
 
 // === Sử dụng Routes ===

@@ -67,6 +67,12 @@ module.exports = (io, pool) => {
       console.log(`Người chơi ${socket.id} đang tìm trận...`);
       
       if (waitingPlayer) {
+        if (waitingPlayer.id === socket.id) {
+          // Người chơi này đã ở trong hàng chờ, không làm gì cả.
+          // (Họ đã gọi find_game 2 lần)
+          console.log(`Người chơi ${socket.id} đã ở trong hàng chờ.`);
+          return; 
+        }
         // --- Đã có người chờ -> Ghép cặp ---
         const player1Socket = waitingPlayer;
         const player2Socket = socket;
