@@ -4,7 +4,6 @@ const express = require('express');
 const cors = require('cors');
 const pool = require('./config/db.config'); 
 const createTables = require('./models/init.db'); 
-const chessSocketService = require('./services/chess_socket.service');
 // --- CẬP NHẬT: Thêm http và socket.io ---
 const http = require('http'); // MỚI
 const { Server } = require("socket.io"); // MỚI
