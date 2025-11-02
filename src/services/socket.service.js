@@ -56,7 +56,9 @@ function checkDraw(board) {
 // Biến quản lý trạng thái
 let waitingPlayer = null; // Người chơi đang chờ
 let rooms = {}; // Lưu trữ các phòng chơi: { roomId: { players: [socket1, socket2], board: [...], turn: ... } }
-
+function generateRoomId() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
 module.exports = (io, pool) => {
   
   io.on('connection', (socket) => {
