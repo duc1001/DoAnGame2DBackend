@@ -58,7 +58,7 @@ app.get('/', (req, res) => {
 
 // === MỚI: Gọi logic xử lý Socket ===
 require('./services/socket.service')(io, pool);
-//require('./services/chess_socket.service')(io, pool);
+
 // ----------------------------------
 
 // === CẬP NHẬT: Khởi chạy "server" thay vì "app" ===
